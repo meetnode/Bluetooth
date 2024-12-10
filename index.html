@@ -1,31 +1,34 @@
 <!DOCTYPE html>
 <html>
-
 <body>
-    <button id="connect">Connect to Bluetooth Devices</button>
-    <pre id="output"></pre>
+  <button id="connect">Connect to Bluetooth Device</button>
+  <pre id="output"></pre>
 
-    <script>
-        const output = document.getElementById("output");
-        document.getElementById("connect").addEventListener("click", async () => {
-            try {
-                const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['battery_service']
-                });
+  <script>
+    const output = document.getElementById("output");
 
-                output.textContent = `Connected to ${device.name || 'Unnamed Device'}`;
-
-                const server = await device.gatt.connect();
-                const service = await server.getPrimaryService('battery_service');
-                const characteristic = await service.getCharacteristic('battery_level');
-                const value = await characteristic.readValue();
-                output.textContent += `\nBattery Level: ${value.getUint8(0)}%`;
-            } catch (error) {
-                output.textContent = `Error: ${error}`;
-            }
+    document.getElementById("connect").addEventListener("click", async () => {
+      try {
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true, 
+          optionalServices: ['device_information'] 
         });
-    </script>
-</body>
 
+        output.textContent = `Connecting to ${device.name || 'Unnamed Device'}...`;
+
+        const server = await device.gatt.connect();
+
+        const service = await server.getPrimaryService('device_information');
+        const characteristic = await service.getCharacteristic('manufacturer_name_string');
+        const value = await characteristic.readValue();
+        
+        const decoder = new TextDecoder('utf-8');
+        output.textContent += `\nManufacturer: ${decoder.decode(value)}`;
+
+      } catch (error) {
+        output.textContent = `Error: ${error}`;
+      }
+    });
+  </script>
+</body>
 </html>
